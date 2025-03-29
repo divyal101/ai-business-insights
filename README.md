@@ -1,5 +1,11 @@
 # AI Business Insights Assistant
 
+[![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/divyal101/ai-business-insights/actions/workflows/test.yml/badge.svg)](https://github.com/divyal101/ai-business-insights/actions/workflows/test.yml)
+[![Codecov](https://codecov.io/gh/divyal101/ai-business-insights/branch/main/graph/badge.svg)](https://codecov.io/gh/divyal101/ai-business-insights)
+[![Build Pass](https://img.shields.io/badge/build-pass-brightgreen.svg)](https://github.com/divyal101/ai-business-insights/actions/workflows/test.yml)
+
 An AI-powered business intelligence tool that leverages Google's Gemini AI to provide structured, actionable insights for strategic decision-making.
 
 ## Features
