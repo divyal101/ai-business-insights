@@ -1,5 +1,11 @@
 import pytest
-from query_engine import generate_insights, format_response
+import sys
+import os
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from backend.query_engine import generate_insights, format_response
 
 def test_format_response_general():
     """Test formatting of general analysis response."""

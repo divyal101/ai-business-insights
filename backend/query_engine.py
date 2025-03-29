@@ -1,6 +1,11 @@
+"""
+AI-powered query engine for business insights generation.
+"""
+
 import google.generativeai as genai
 import os
-from typing import Dict, List, Optional
+import re
+from typing import Dict, List, Optional, Any
 
 # Load API key from environment variables
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -13,7 +18,7 @@ try:
 except Exception as e:
     raise ValueError(f"Failed to configure Gemini API: {str(e)}")
 
-def generate_insights(user_query: str, analysis_type: Optional[str] = None) -> Dict:
+def generate_insights(user_query: str, analysis_type: Optional[str] = None) -> Dict[str, Any]:
     """
     Generates business insights based on the given user query.
     Uses Google's Gemini AI to provide structured insights.
@@ -107,135 +112,58 @@ def generate_insights(user_query: str, analysis_type: Optional[str] = None) -> D
         print(f"❌ Error generating response: {str(e)}")
         return {"error": f"Error generating response: {str(e)}"}
 
-def format_response(response_text: str, analysis_type: Optional[str] = None) -> Dict:
+def format_response(response_text: str, analysis_type: Optional[str] = None) -> Dict[str, Any]:
     """
-    Formats the AI response into a structured dictionary based on analysis type.
-    """
-    if analysis_type == "competitive":
-        sections = {
-            "market_position": "",
-            "competitor_analysis": [],
-            "differentiators": [],
-            "opportunities": [],
-            "threats": []
-        }
-        
-        # Parse competitive analysis sections
-        current_section = "market_position"
-        for line in response_text.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-                
-            if "📊 Market Position Analysis:" in line:
-                current_section = "market_position"
-                continue
-            elif "🔍 Competitor Strengths and Weaknesses:" in line:
-                current_section = "competitor_analysis"
-                continue
-            elif "💡 Strategic Differentiators:" in line:
-                current_section = "differentiators"
-                continue
-            elif "🎯 Market Opportunities:" in line:
-                current_section = "opportunities"
-                continue
-            elif "⚠️ Potential Threats:" in line:
-                current_section = "threats"
-                continue
-                
-            if current_section == "market_position":
-                sections[current_section] += line + "\n"
-            else:
-                # Remove bullet points and clean up the line
-                line = line.lstrip("•-* ")
-                if line:
-                    sections[current_section].append(line)
+    Format the AI response into a structured dictionary based on analysis type.
     
+    Args:
+        response_text (str): Raw response text from the AI model
+        analysis_type (Optional[str]): Type of analysis ('general', 'competitive', or 'trend')
+        
+    Returns:
+        Dict[str, Any]: Formatted response with structured sections
+    """
+    formatted_response = {}
+    
+    if analysis_type == "general":
+        # Extract sections for general analysis
+        formatted_response["summary"] = extract_section(response_text, "Business Insights")
+        formatted_response["key_points"] = extract_section(response_text, "Key Strategic Points")
+        formatted_response["recommendations"] = extract_section(response_text, "Actionable Recommendations")
+        formatted_response["timeline"] = extract_section(response_text, "Implementation Timeline")
+        formatted_response["outcomes"] = extract_section(response_text, "Expected Outcomes")
+        
+    elif analysis_type == "competitive":
+        # Extract sections for competitive analysis
+        formatted_response["market_position"] = extract_section(response_text, "Market Position Analysis")
+        formatted_response["competitor_analysis"] = extract_section(response_text, "Competitor Strengths and Weaknesses")
+        formatted_response["differentiators"] = extract_section(response_text, "Strategic Differentiators")
+        formatted_response["opportunities"] = extract_section(response_text, "Market Opportunities")
+        formatted_response["threats"] = extract_section(response_text, "Potential Threats")
+        
     elif analysis_type == "trend":
-        sections = {
-            "current_trends": [],
-            "predictions": [],
-            "opportunities": [],
-            "risks": [],
-            "measures": []
-        }
-        
-        # Parse trend analysis sections
-        current_section = "current_trends"
-        for line in response_text.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-                
-            if "📈 Current Market Trends:" in line:
-                current_section = "current_trends"
-                continue
-            elif "🔮 Future Predictions:" in line:
-                current_section = "predictions"
-                continue
-            elif "🎯 Growth Opportunities:" in line:
-                current_section = "opportunities"
-                continue
-            elif "⚠️ Risk Factors:" in line:
-                current_section = "risks"
-                continue
-            elif "💡 Proactive Measures:" in line:
-                current_section = "measures"
-                continue
-                
-            # Remove bullet points and clean up the line
-            line = line.lstrip("•-* ")
-            if line:
-                sections[current_section].append(line)
+        # Extract sections for trend analysis
+        formatted_response["current_trends"] = extract_section(response_text, "Current Market Trends")
+        formatted_response["predictions"] = extract_section(response_text, "Future Predictions")
+        formatted_response["opportunities"] = extract_section(response_text, "Growth Opportunities")
+        formatted_response["risks"] = extract_section(response_text, "Risk Factors")
+        formatted_response["measures"] = extract_section(response_text, "Proactive Measures")
     
-    else:  # general analysis
-        sections = {
-            "summary": "",
-            "key_points": [],
-            "recommendations": [],
-            "timeline": [],
-            "outcomes": []
-        }
+    return formatted_response
+
+def extract_section(text: str, section_name: str) -> str:
+    """
+    Extract content between section headers in the response.
+    
+    Args:
+        text (str): Full response text
+        section_name (str): Name of the section to extract
         
-        # Parse general analysis sections
-        current_section = "summary"
-        for line in response_text.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-                
-            if "📊 Business Insights:" in line:
-                current_section = "summary"
-                continue
-            elif "🔑 Key Strategic Points:" in line:
-                current_section = "key_points"
-                continue
-            elif "✅ Actionable Recommendations:" in line:
-                current_section = "recommendations"
-                continue
-            elif "📈 Implementation Timeline:" in line:
-                current_section = "timeline"
-                continue
-            elif "📊 Expected Outcomes:" in line:
-                current_section = "outcomes"
-                continue
-                
-            if current_section == "summary":
-                # Clean up the line and add to summary
-                line = line.lstrip("•-* ")
-                if line:
-                    sections[current_section] += line + "\n"
-            else:
-                # Remove bullet points and clean up the line
-                line = line.lstrip("•-* ")
-                if line:
-                    sections[current_section].append(line)
-
-    # Clean up empty sections
-    for section in sections:
-        if isinstance(sections[section], list):
-            sections[section] = [item for item in sections[section] if item]
-        elif isinstance(sections[section], str):
-            sections[section] = sections[section].strip()
-
-    return sections
+    Returns:
+        str: Extracted section content
+    """
+    pattern = f"{section_name}:(.*?)(?=\n\n|$)"
+    match = re.search(pattern, text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return ""
